@@ -4,7 +4,7 @@ resource "google_bigquery_dataset" "warehouse" {
   description                 = "Główny dataset tworzony przez Terraform"
   location                    = "US"
   default_table_expiration_ms = 3600000 * 24 * 30 
-
+  delete_contents_on_destroy = true
   labels = {
     env = "production"
     managed_by = "terraform"

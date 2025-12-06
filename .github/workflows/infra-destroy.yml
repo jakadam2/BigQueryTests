@@ -1,0 +1,44 @@
+name: Destroy Infrastructure 
+
+on:
+  workflow_dispatch: 
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  BUCKET_NAME: ${{ secrets.TF_STATE_BUCKET_NAME }}
+
+jobs:
+  terraform-destroy:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+    
+    environment: production 
+    
+    defaults:
+      run:
+        working-directory: ./infra 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init -backend-config="bucket=${{ env.BUCKET_NAME }}"
+
+      - name: Terraform Destroy
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+        run: terraform destroy -auto-approve -input=false

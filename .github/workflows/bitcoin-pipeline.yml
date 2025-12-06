@@ -1,14 +1,20 @@
 name: Bitcoin Data Pipeline
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: 'YYYY-MM-DD'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
   id-token: write
 
 env:
-  PROJECT_ID: 'peak-summer-480411-n8' # <-- Twoje ID projektu
+  PROJECT_ID: 'peak-summer-480411-n8'
 
 jobs:
   sync-bitcoin:
@@ -33,4 +39,5 @@ jobs:
       - name: Run Sync Script
         env:
           GCP_PROJECT_ID: ${{ env.PROJECT_ID }}
+          MANUAL_START_DATE: ${{ inputs.start_date }}
         run: python ingestion/sync_bitcoin.py
