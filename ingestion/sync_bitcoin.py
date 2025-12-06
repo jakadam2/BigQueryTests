@@ -24,23 +24,25 @@ def run_query(client, query):
         priority=bigquery.QueryPriority.INTERACTIVE
     )
     query_job = client.query(query, job_config=job_config)
-    result = query_job.result() 
-    print(f"Przetworzono danych: {query_job.total_bytes_processed / 1024**3:.2f} GB")
+    result = query_job.result()
+    print(f"Sukces! Przetworzono danych (skan): {query_job.total_bytes_processed / 1024**3:.4f} GB")
 
 def sync_data():
     client = bigquery.Client(project=PROJECT_ID)
     
     last_ts = get_last_timestamp(client)
 
+    columns = "`hash`, `size`, `virtual_size`, `version`, `lock_time`, `block_hash`, `block_number`, `block_timestamp`, `input_count`, `output_count`, `input_value`, `output_value`, `fee`"
+
     if last_ts is None:
         print("--- TRYB: INITIAL LOAD (BACKFILL) ---")
         print("Tabela docelowa jest pusta. Pobieram historię od 2024-01-01.")
-
+        
         query = f"""
             INSERT INTO `{FULL_TARGET_ID}` 
-            (hash, size, virtual_size, version, lock_time, block_hash, block_number, block_timestamp, input_count, output_count, input_value, output_value, fee)
+            ({columns})
             SELECT 
-                hash, size, virtual_size, version, lock_time, block_hash, block_number, block_timestamp, input_count, output_count, input_value, output_value, fee
+                {columns}
             FROM `{SOURCE_TABLE}`
             WHERE block_timestamp >= '2024-01-01'
         """
@@ -54,9 +56,9 @@ def sync_data():
 
         query = f"""
             INSERT INTO `{FULL_TARGET_ID}` 
-            (hash, size, virtual_size, version, lock_time, block_hash, block_number, block_timestamp, input_count, output_count, input_value, output_value, fee)
+            ({columns})
             SELECT 
-                hash, size, virtual_size, version, lock_time, block_hash, block_number, block_timestamp, input_count, output_count, input_value, output_value, fee
+                {columns}
             FROM `{SOURCE_TABLE}`
             WHERE block_timestamp > TIMESTAMP('{last_ts}')
         """
