@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./terraform
+        working-directory: ./infra
 
     steps:
       - name: Checkout code
@@ -55,7 +55,7 @@ jobs:
     environment: production
     defaults:
       run:
-        working-directory: ./terraform
+        working-directory: ./infra
 
     steps:
       - name: Checkout code
