@@ -39,7 +39,7 @@ jobs:
 
       - name: Terraform Plan
         env:
-          TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
         run: terraform plan -out=tfplan -input=false
       
       - name: Upload Plan Artifact
