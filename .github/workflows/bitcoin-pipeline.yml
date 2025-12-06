@@ -1,0 +1,36 @@
+name: Bitcoin Data Pipeline
+
+on:
+  workflow_dispatch: 
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: 'peak-summer-480411-n8' # <-- Twoje ID projektu
+
+jobs:
+  sync-bitcoin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install google-cloud-bigquery
+
+      - name: Run Sync Script
+        env:
+          GCP_PROJECT_ID: ${{ env.PROJECT_ID }}
+        run: python ingestion/sync_bitcoin.py
