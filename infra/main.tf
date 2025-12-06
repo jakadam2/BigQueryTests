@@ -14,7 +14,7 @@ resource "google_bigquery_dataset" "warehouse" {
 resource "google_bigquery_table" "bitcoin_transactions" {
   dataset_id = google_bigquery_dataset.warehouse.dataset_id
   table_id   = "bitcoin_transactions"
-  
+  deletion_protection = false
   time_partitioning {
     type  = "DAY"
     field = "block_timestamp"
