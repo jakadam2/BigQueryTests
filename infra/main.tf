@@ -145,16 +145,18 @@ resource "google_cloud_run_v2_service" "grafana" {
         cpu_idle = true
       }
 
+      # Uproszczony Startup Probe - daje 4 minuty na start (instalcję pluginu)
       startup_probe {
-        initial_delay_seconds = 15
-        timeout_seconds       = 5
-        period_seconds        = 10
-        failure_threshold     = 20
+        initial_delay_seconds = 10
+        timeout_seconds       = 2
+        period_seconds        = 5
+        failure_threshold     = 48 
         tcp_socket {
           port = 3000
         }
       }
 
+      # --- ZMIENNE ŚRODOWISKOWE ---
       env {
         name  = "GF_INSTALL_PLUGINS"
         value = "grafana-bigquery-datasource"
@@ -167,25 +169,35 @@ resource "google_cloud_run_v2_service" "grafana" {
         name  = "GF_AUTH_ANONYMOUS_ORG_ROLE"
         value = "Admin" 
       }
-      
       env {
         name  = "GF_SERVER_HTTP_PORT"
         value = "3000"
       }
       env {
         name  = "GF_SERVER_HTTP_ADDR"
-        value = "0.0.0.0" 
+        value = "0.0.0.0"
+      }
+      
+      # KLUCZOWA ZMIANA: Mówimy Grafanie "Szukaj configów w moim folderze"
+      # Zamiast w domyślnym /etc/grafana/provisioning, który może mieć błędy uprawnień
+      env {
+        name  = "GF_PATHS_PROVISIONING"
+        value = "/my_custom_config/provisioning"
       }
 
+      # --- MONTAŻ PLIKÓW W OSOBNYM KATALOGU ---
+      
+      # 1. Konfiguracja (YAML) trafia do podkatalogu 'provisioning/dashboards'
       volume_mounts {
         name       = "dashboards-yaml"
-        mount_path = "/etc/grafana/provisioning/dashboards/dashboards.yaml"
+        mount_path = "/my_custom_config/provisioning/dashboards/dashboards.yaml"
         sub_path   = "dashboards.yaml"
       }
 
+      # 2. Dane (JSON) trafiają do podkatalogu 'files' (zgodnie z plikiem YAML wyżej)
       volume_mounts {
         name       = "dashboard-json"
-        mount_path = "/etc/grafana/dashboards_files/my_dashboard.json" 
+        mount_path = "/my_custom_config/files/my_dashboard.json" 
         sub_path   = "my_dashboard.json"
       }
     }
