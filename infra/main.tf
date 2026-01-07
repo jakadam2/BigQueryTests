@@ -139,8 +139,19 @@ resource "google_cloud_run_v2_service" "grafana" {
 
       resources {
         limits = {
-          cpu    = "1"
-          memory = "1Gi"
+          cpu    = "2"
+          memory = "2Gi"
+        }
+        cpu_idle = true #
+      }
+
+      startup_probe {
+        initial_delay_seconds = 10
+        timeout_seconds       = 5
+        period_seconds        = 10
+        failure_threshold     = 20 
+        tcp_socket {
+          port = 3000
         }
       }
 
@@ -156,6 +167,11 @@ resource "google_cloud_run_v2_service" "grafana" {
       env {
         name  = "GF_AUTH_ANONYMOUS_ORG_ROLE"
         value = "Admin" 
+      }
+
+      env {
+        name  = "GF_SERVER_HTTP_PORT"
+        value = "3000"
       }
 
       volume_mounts {
