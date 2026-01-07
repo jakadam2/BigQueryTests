@@ -46,6 +46,12 @@ resource "google_service_account" "dbt_runner" {
   display_name = "DBT Runner Service Account"
 }
 
+resource "google_project_service" "run_api" {
+  project            = var.project_id
+  service            = "run.googleapis.com"
+  disable_on_destroy = false
+}
+
 
 resource "google_project_service" "secretmanager" {
   project = var.project_id
@@ -113,6 +119,12 @@ resource "google_cloud_run_v2_service" "grafana" {
   name     = "grafana-dashboard"
   location = "US"
   ingress  = "INGRESS_TRAFFIC_ALL"
+
+  depends_on = [
+    google_project_service.run_api,
+    google_secret_manager_secret_version.grafana_dashboards_yaml_v1,
+    google_secret_manager_secret_version.grafana_dashboard_json_v1
+  ]
 
   template {
     service_account = google_service_account.grafana_sa.email
