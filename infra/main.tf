@@ -142,14 +142,14 @@ resource "google_cloud_run_v2_service" "grafana" {
           cpu    = "2"
           memory = "2Gi"
         }
-        cpu_idle = true #
+        cpu_idle = true
       }
 
       startup_probe {
-        initial_delay_seconds = 10
+        initial_delay_seconds = 15
         timeout_seconds       = 5
         period_seconds        = 10
-        failure_threshold     = 20 
+        failure_threshold     = 20
         tcp_socket {
           port = 3000
         }
@@ -159,7 +159,6 @@ resource "google_cloud_run_v2_service" "grafana" {
         name  = "GF_INSTALL_PLUGINS"
         value = "grafana-bigquery-datasource"
       }
-      
       env {
         name  = "GF_AUTH_ANONYMOUS_ENABLED"
         value = "true"
@@ -168,10 +167,14 @@ resource "google_cloud_run_v2_service" "grafana" {
         name  = "GF_AUTH_ANONYMOUS_ORG_ROLE"
         value = "Admin" 
       }
-
+      
       env {
         name  = "GF_SERVER_HTTP_PORT"
         value = "3000"
+      }
+      env {
+        name  = "GF_SERVER_HTTP_ADDR"
+        value = "0.0.0.0" 
       }
 
       volume_mounts {
@@ -182,7 +185,7 @@ resource "google_cloud_run_v2_service" "grafana" {
 
       volume_mounts {
         name       = "dashboard-json"
-        mount_path = "/var/lib/grafana/dashboards/my_dashboard.json" 
+        mount_path = "/etc/grafana/dashboards_files/my_dashboard.json" 
         sub_path   = "my_dashboard.json"
       }
     }
@@ -192,8 +195,8 @@ resource "google_cloud_run_v2_service" "grafana" {
       secret {
         secret = google_secret_manager_secret.grafana_dashboards_yaml.secret_id
         items {
-          version  = "latest"
-          path = "dashboards.yaml"
+          version = "latest"
+          path    = "dashboards.yaml"
         }
       }
     }
@@ -202,8 +205,8 @@ resource "google_cloud_run_v2_service" "grafana" {
       secret {
         secret = google_secret_manager_secret.grafana_dashboard_json.secret_id
         items {
-          version  = "latest"
-          path = "my_dashboard.json"
+          version = "latest"
+          path    = "my_dashboard.json"
         }
       }
     }
