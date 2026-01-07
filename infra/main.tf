@@ -179,9 +179,10 @@ resource "google_cloud_run_v2_service" "grafana" {
         mount_path = "/etc/grafana/provisioning/dashboards/dashboards.yaml"
         sub_path   = "dashboards.yaml"
       }
+
       volume_mounts {
         name       = "dashboard-json"
-        mount_path = "/etc/grafana/provisioning/dashboards/my_dashboard.json"
+        mount_path = "/var/lib/grafana/dashboards/my_dashboard.json" 
         sub_path   = "my_dashboard.json"
       }
     }
