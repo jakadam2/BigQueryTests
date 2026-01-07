@@ -121,10 +121,9 @@ resource "google_cloud_run_v2_service" "grafana" {
   ingress  = "INGRESS_TRAFFIC_ALL"
   deletion_protection = false
 
+  # Wywalamy depends_on od plików, bo ich nie montujemy
   depends_on = [
-    google_project_service.run_api,
-    google_secret_manager_secret_version.grafana_dashboards_yaml_v1,
-    google_secret_manager_secret_version.grafana_dashboard_json_v1
+    google_project_service.run_api
   ]
 
   template {
@@ -145,18 +144,18 @@ resource "google_cloud_run_v2_service" "grafana" {
         cpu_idle = true
       }
 
-      # Uproszczony Startup Probe - daje 4 minuty na start (instalcję pluginu)
+      # Standardowy probe
       startup_probe {
         initial_delay_seconds = 10
-        timeout_seconds       = 2
-        period_seconds        = 5
-        failure_threshold     = 48 
+        timeout_seconds       = 5
+        period_seconds        = 10
+        failure_threshold     = 20
         tcp_socket {
           port = 3000
         }
       }
 
-      # --- ZMIENNE ŚRODOWISKOWE ---
+      # --- TYLKO ZMIENNE ŚRODOWISKOWE (Bez plików) ---
       env {
         name  = "GF_INSTALL_PLUGINS"
         value = "grafana-bigquery-datasource"
@@ -173,54 +172,7 @@ resource "google_cloud_run_v2_service" "grafana" {
         name  = "GF_SERVER_HTTP_PORT"
         value = "3000"
       }
-      env {
-        name  = "GF_SERVER_HTTP_ADDR"
-        value = "0.0.0.0"
-      }
       
-      # KLUCZOWA ZMIANA: Mówimy Grafanie "Szukaj configów w moim folderze"
-      # Zamiast w domyślnym /etc/grafana/provisioning, który może mieć błędy uprawnień
-      env {
-        name  = "GF_PATHS_PROVISIONING"
-        value = "/my_custom_config/provisioning"
-      }
-
-      # --- MONTAŻ PLIKÓW W OSOBNYM KATALOGU ---
-      
-      # 1. Konfiguracja (YAML) trafia do podkatalogu 'provisioning/dashboards'
-      volume_mounts {
-        name       = "dashboards-yaml"
-        mount_path = "/my_custom_config/provisioning/dashboards/dashboards.yaml"
-        sub_path   = "dashboards.yaml"
-      }
-
-      # 2. Dane (JSON) trafiają do podkatalogu 'files' (zgodnie z plikiem YAML wyżej)
-      volume_mounts {
-        name       = "dashboard-json"
-        mount_path = "/my_custom_config/files/my_dashboard.json" 
-        sub_path   = "my_dashboard.json"
-      }
-    }
-
-    volumes {
-      name = "dashboards-yaml"
-      secret {
-        secret = google_secret_manager_secret.grafana_dashboards_yaml.secret_id
-        items {
-          version = "latest"
-          path    = "dashboards.yaml"
-        }
-      }
-    }
-    volumes {
-      name = "dashboard-json"
-      secret {
-        secret = google_secret_manager_secret.grafana_dashboard_json.secret_id
-        items {
-          version = "latest"
-          path    = "my_dashboard.json"
-        }
-      }
     }
   }
 }
