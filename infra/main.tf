@@ -119,6 +119,7 @@ resource "google_cloud_run_v2_service" "grafana" {
   name     = "grafana-dashboard"
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
+  deletion_protection = false
 
   depends_on = [
     google_project_service.run_api,
