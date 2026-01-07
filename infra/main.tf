@@ -117,7 +117,7 @@ resource "google_secret_manager_secret_iam_member" "grafana_secret_access" {
 
 resource "google_cloud_run_v2_service" "grafana" {
   name     = "grafana-dashboard"
-  location = "US"
+  location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
   depends_on = [
