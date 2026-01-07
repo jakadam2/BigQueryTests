@@ -162,7 +162,7 @@ resource "google_cloud_run_v2_service" "grafana" {
       secret {
         secret = google_secret_manager_secret.grafana_dashboards_yaml.secret_id
         items {
-          key  = "latest"
+          version  = "latest"
           path = "dashboards.yaml"
         }
       }
@@ -172,7 +172,7 @@ resource "google_cloud_run_v2_service" "grafana" {
       secret {
         secret = google_secret_manager_secret.grafana_dashboard_json.secret_id
         items {
-          key  = "latest"
+          version  = "latest"
           path = "my_dashboard.json"
         }
       }
