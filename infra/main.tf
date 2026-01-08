@@ -121,9 +121,10 @@ resource "google_cloud_run_v2_service" "grafana" {
   ingress  = "INGRESS_TRAFFIC_ALL"
   deletion_protection = false
 
-  # Wywalamy depends_on od plików, bo ich nie montujemy
   depends_on = [
-    google_project_service.run_api
+    google_project_service.run_api,
+    google_secret_manager_secret_version.grafana_dashboards_yaml_v1,
+    google_secret_manager_secret_version.grafana_dashboard_json_v1
   ]
 
   template {
@@ -144,7 +145,6 @@ resource "google_cloud_run_v2_service" "grafana" {
         cpu_idle = true
       }
 
-      # Standardowy probe
       startup_probe {
         initial_delay_seconds = 10
         timeout_seconds       = 5
@@ -155,7 +155,6 @@ resource "google_cloud_run_v2_service" "grafana" {
         }
       }
 
-      # --- TYLKO ZMIENNE ŚRODOWISKOWE (Bez plików) ---
       env {
         name  = "GF_INSTALL_PLUGINS"
         value = "grafana-bigquery-datasource"
@@ -172,7 +171,43 @@ resource "google_cloud_run_v2_service" "grafana" {
         name  = "GF_SERVER_HTTP_PORT"
         value = "3000"
       }
+
+      # --- POWRÓT MONTAŻU PLIKÓW (Bezpieczne Ścieżki) ---
       
+      # 1. Konfiguracja (YAML) - Wrzucamy do standardowego folderu provisioning
+      volume_mounts {
+        name       = "dashboards-yaml"
+        mount_path = "/etc/grafana/provisioning/dashboards/dashboards.yaml"
+        sub_path   = "dashboards.yaml"
+      }
+
+
+      volume_mounts {
+        name       = "dashboard-json"
+        mount_path = "/etc/grafana-dashboards/my_dashboard.json" 
+        sub_path   = "my_dashboard.json"
+      }
+    }
+
+    volumes {
+      name = "dashboards-yaml"
+      secret {
+        secret = google_secret_manager_secret.grafana_dashboards_yaml.secret_id
+        items {
+          version = "latest"
+          path    = "dashboards.yaml"
+        }
+      }
+    }
+    volumes {
+      name = "dashboard-json"
+      secret {
+        secret = google_secret_manager_secret.grafana_dashboard_json.secret_id
+        items {
+          version = "latest"
+          path    = "my_dashboard.json"
+        }
+      }
     }
   }
 }
