@@ -90,13 +90,29 @@ resource "google_secret_manager_secret_version" "grafana_dashboards_yaml_v1" {
   secret_data = file("${path.module}/configs/dashboards.yaml")
 }
 
+resource "google_secret_manager_secret" "grafana_datasources_yaml" {
+  secret_id = "grafana-provisioning-datasources"
+  replication {
+    auto {}
+  }
+  depends_on = [google_project_service.secretmanager]
+}
+
+resource "google_secret_manager_secret_version" "grafana_datasources_yaml_v1" {
+  secret      = google_secret_manager_secret.grafana_datasources_yaml.id
+  secret_data = templatefile("${path.module}/configs/datasources.yaml", {
+    project_id = var.project_id
+  })
+}
+
 resource "google_secret_manager_secret_iam_member" "grafana_secret_access" {
   for_each = toset([
     google_secret_manager_secret.grafana_dashboards_yaml.secret_id,
-    google_secret_manager_secret.grafana_dashboard_json.secret_id
+    google_secret_manager_secret.grafana_dashboard_json.secret_id,
+    google_secret_manager_secret.grafana_datasources_yaml.secret_id
   ])
   
-  project   = var.project_id # Upewnij się, że masz project_id, jeśli nie jest domyślny
+  project   = var.project_id 
   secret_id = each.key
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.grafana_sa.email}"
@@ -197,6 +213,11 @@ resource "google_cloud_run_v2_service" "grafana" {
         mount_path = "/etc/grafana-dashboards"
         # Usunięto sub_path i nazwę pliku ze ścieżki
       }
+
+      volume_mounts {
+        name       = "datasources-yaml"
+        mount_path = "/etc/grafana/provisioning/datasources"
+      }
     }
 
     volumes {
@@ -209,6 +230,18 @@ resource "google_cloud_run_v2_service" "grafana" {
         }
       }
     }
+
+    volumes {
+      name = "datasources-yaml"
+      secret {
+        secret = google_secret_manager_secret.grafana_datasources_yaml.secret_id
+        items {
+          version = "latest"
+          path    = "datasources.yaml"
+        }
+      }
+    }
+
     volumes {
       name = "dashboard-json"
       secret {
