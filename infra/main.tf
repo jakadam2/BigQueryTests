@@ -114,7 +114,8 @@ resource "google_cloud_run_v2_service" "grafana" {
   depends_on = [
     google_project_service.run_api,
     google_secret_manager_secret_version.grafana_dashboards_yaml_v1,
-    google_secret_manager_secret_version.grafana_dashboard_json_v1
+    google_secret_manager_secret_version.grafana_dashboard_json_v1,
+    google_secret_manager_secret_iam_member.grafana_secret_access
   ]
 
   template {
