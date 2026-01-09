@@ -1,0 +1,177 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-bigquery-datasource",
+        "uid": "P1809F7CD0C757575"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-bigquery-datasource", "uid": "P1809F7CD0C757575" },
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) as total FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp)",
+          "refId": "A",
+          "timeColumn": "block_timestamp",
+          "timeColumnType": "TIMESTAMP"
+        }
+      ],
+      "title": "Total Records (In Selected Time Range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-bigquery-datasource",
+        "uid": "P1809F7CD0C757575"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [ { "color": "green", "value": null } ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 1,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-bigquery-datasource", "uid": "P1809F7CD0C757575" },
+          "rawQuery": true,
+          "rawSql": "SELECT TIMESTAMP_TRUNC(block_timestamp, HOUR) as time, count(*) as transactions FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp) GROUP BY 1 ORDER BY 1",
+          "refId": "A",
+          "timeColumn": "block_timestamp",
+          "timeColumnType": "TIMESTAMP"
+        }
+      ],
+      "title": "Transactions over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-bigquery-datasource",
+        "uid": "P1809F7CD0C757575"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [ { "color": "red", "value": null } ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 2,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-bigquery-datasource", "uid": "P1809F7CD0C757575" },
+          "rawQuery": true,
+          "rawSql": "SELECT TIMESTAMP_TRUNC(block_timestamp, HOUR) as time, avg(fee) as avg_fee FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp) GROUP BY 1 ORDER BY 1",
+          "refId": "A",
+          "timeColumn": "block_timestamp",
+          "timeColumnType": "TIMESTAMP"
+        }
+      ],
+      "title": "Fee over Time (Avg)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-bigquery-datasource",
+        "uid": "P1809F7CD0C757575"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "auto", "displayMode": "auto" }
+        }
+      },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 12 },
+      "id": 3,
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-bigquery-datasource", "uid": "P1809F7CD0C757575" },
+          "rawQuery": true,
+          "rawSql": "SELECT block_timestamp, block_number, `hash`, size, fee FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp) ORDER BY block_timestamp DESC LIMIT 100",
+          "refId": "A",
+          "timeColumn": "block_timestamp",
+          "timeColumnType": "TIMESTAMP"
+        }
+      ],
+      "title": "Recent Transactions",
+      "type": "table"
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [],
+  "templating": { "list": [] },
+  "time": { "from": "now-24h", "to": "now" },
+  "title": "Bitcoin BigQuery Dashboard",
+  "uid": "bitcoin-dashboard-v1",
+  "version": 1
+}
