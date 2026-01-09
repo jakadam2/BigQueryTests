@@ -90,6 +90,18 @@ resource "google_secret_manager_secret_version" "grafana_dashboards_yaml_v1" {
   secret_data = file("${path.module}/configs/dashboards.yaml")
 }
 
+resource "google_secret_manager_secret_iam_member" "grafana_secret_access" {
+  for_each = toset([
+    google_secret_manager_secret.grafana_dashboards_yaml.secret_id,
+    google_secret_manager_secret.grafana_dashboard_json.secret_id
+  ])
+  
+  project   = var.project_id # Upewnij się, że masz project_id, jeśli nie jest domyślny
+  secret_id = each.key
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.grafana_sa.email}"
+}
+
 resource "google_secret_manager_secret" "grafana_dashboard_json" {
   secret_id = "grafana-dashboard-json"
   replication {
