@@ -44,13 +44,13 @@
         {
           "datasource": { "type": "grafana-bigquery-datasource", "uid": "P1809F7CD0C757575" },
           "rawQuery": true,
-          "rawSql": "SELECT $__timeGroupAlias(block_timestamp, $__interval), count(*) as transactions FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp) GROUP BY 1 ORDER BY 1",
+          "rawSql": "SELECT TIMESTAMP_TRUNC(block_timestamp, HOUR) as time, count(*) as transactions FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp) GROUP BY 1 ORDER BY 1",
           "refId": "A",
           "timeColumn": "block_timestamp",
           "timeColumnType": "TIMESTAMP"
         }
       ],
-      "title": "Liczba transakcji w czasie",
+      "title": "Liczba transakcji w czasie (na godzinę)",
       "type": "timeseries"
     },
     {
@@ -107,7 +107,7 @@
         {
           "datasource": { "type": "grafana-bigquery-datasource", "uid": "P1809F7CD0C757575" },
           "rawQuery": true,
-          "rawSql": "SELECT block_timestamp, block_number, hash, size, fee FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp) ORDER BY block_timestamp DESC LIMIT 100",
+          "rawSql": "SELECT block_timestamp, block_number, `hash`, size, fee FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp) ORDER BY block_timestamp DESC LIMIT 100",
           "refId": "A",
           "timeColumn": "block_timestamp",
           "timeColumnType": "TIMESTAMP"
@@ -121,7 +121,7 @@
   "style": "dark",
   "tags": [],
   "templating": { "list": [] },
-  "time": { "from": "now-6h", "to": "now" },
+  "time": { "from": "now-24h", "to": "now" },
   "title": "Bitcoin BigQuery Dashboard",
   "uid": "bitcoin-dashboard-v1",
   "version": 1
