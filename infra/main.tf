@@ -100,7 +100,9 @@ resource "google_secret_manager_secret" "grafana_dashboard_json" {
 
 resource "google_secret_manager_secret_version" "grafana_dashboard_json_v1" {
   secret      = google_secret_manager_secret.grafana_dashboard_json.id
-  secret_data = file("${path.module}/configs/my_dashboard.json")
+  secret_data = templatefile("${path.module}/configs/my_dashboard.json", {
+    project_id = var.project_id
+  })
 }
 
 resource "google_cloud_run_v2_service" "grafana" {
