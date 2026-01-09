@@ -103,18 +103,6 @@ resource "google_secret_manager_secret_version" "grafana_dashboard_json_v1" {
   secret_data = file("${path.module}/configs/my_dashboard.json")
 }
 
-resource "google_secret_manager_secret_iam_member" "grafana_secret_access" {
-  for_each = toset([
-    google_secret_manager_secret.grafana_dashboards_yaml.secret_id,
-    google_secret_manager_secret.grafana_dashboard_json.secret_id
-  ])
-  secret_id = each.key
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.grafana_sa.email}"
-}
-
-
-
 resource "google_cloud_run_v2_service" "grafana" {
   name     = "grafana-dashboard"
   location = var.region
@@ -145,11 +133,12 @@ resource "google_cloud_run_v2_service" "grafana" {
         cpu_idle = true
       }
 
+      # ZWIĘKSZONY CZAS NA START (Instalacja pluginów trwa)
       startup_probe {
-        initial_delay_seconds = 10
+        initial_delay_seconds = 30 # Było 10, Grafana wstaje wolno z pluginami
         timeout_seconds       = 5
         period_seconds        = 10
-        failure_threshold     = 20
+        failure_threshold     = 10
         tcp_socket {
           port = 3000
         }
@@ -171,21 +160,27 @@ resource "google_cloud_run_v2_service" "grafana" {
         name  = "GF_SERVER_HTTP_PORT"
         value = "3000"
       }
-
-      # --- POWRÓT MONTAŻU PLIKÓW (Bezpieczne Ścieżki) ---
-      
-      # 1. Konfiguracja (YAML) - Wrzucamy do standardowego folderu provisioning
-      volume_mounts {
-        name       = "dashboards-yaml"
-        mount_path = "/etc/grafana/provisioning/dashboards/dashboards.yaml"
-        sub_path   = "dashboards.yaml"
+      # Ważne: Grafana w Cloud Run potrzebuje wiedzieć, że jest za proxy/load balancerem
+      env {
+        name  = "GF_SERVER_ROOT_URL"
+        value = "%(protocol)s://%(domain)s/"
       }
 
+      # --- POPRAWIONE MONTAŻE ---
+      
+      # 1. Montujemy do KATALOGU provisioning/dashboards.
+      # Plik w środku będzie się nazywał tak, jak zdefiniowano w volumes (dashboards.yaml)
+      volume_mounts {
+        name       = "dashboards-yaml"
+        mount_path = "/etc/grafana/provisioning/dashboards" 
+        # Usunięto sub_path i nazwę pliku ze ścieżki
+      }
 
+      # 2. Montujemy do KATALOGU, gdzie Grafana ma szukać JSONów
       volume_mounts {
         name       = "dashboard-json"
-        mount_path = "/etc/grafana-dashboards/my_dashboard.json" 
-        sub_path   = "my_dashboard.json"
+        mount_path = "/etc/grafana-dashboards"
+        # Usunięto sub_path i nazwę pliku ze ścieżki
       }
     }
 
@@ -195,7 +190,7 @@ resource "google_cloud_run_v2_service" "grafana" {
         secret = google_secret_manager_secret.grafana_dashboards_yaml.secret_id
         items {
           version = "latest"
-          path    = "dashboards.yaml"
+          path    = "dashboards.yaml" # To ustala nazwę pliku wewnątrz folderu
         }
       }
     }
@@ -205,7 +200,7 @@ resource "google_cloud_run_v2_service" "grafana" {
         secret = google_secret_manager_secret.grafana_dashboard_json.secret_id
         items {
           version = "latest"
-          path    = "my_dashboard.json"
+          path    = "my_dashboard.json" # To ustala nazwę pliku wewnątrz folderu
         }
       }
     }
