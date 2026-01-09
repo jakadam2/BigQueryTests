@@ -15,6 +15,47 @@
       },
       "fieldConfig": {
         "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-bigquery-datasource", "uid": "P1809F7CD0C757575" },
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) as total FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp)",
+          "refId": "A",
+          "timeColumn": "block_timestamp",
+          "timeColumnType": "TIMESTAMP"
+        }
+      ],
+      "title": "Total Records (In Selected Time Range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-bigquery-datasource",
+        "uid": "P1809F7CD0C757575"
+      },
+      "fieldConfig": {
+        "defaults": {
           "color": { "mode": "palette-classic" },
           "custom": {
             "axisCenteredZero": false,
@@ -28,14 +69,13 @@
           },
           "thresholds": {
             "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null }
-            ]
+            "steps": [ { "color": "green", "value": null } ]
           }
         },
         "overrides": []
       },
-      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 1,
       "options": {
         "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
         "tooltip": { "mode": "single", "sort": "none" }
@@ -50,7 +90,7 @@
           "timeColumnType": "TIMESTAMP"
         }
       ],
-      "title": "Liczba transakcji w czasie (na godzinę)",
+      "title": "Transactions over Time",
       "type": "timeseries"
     },
     {
@@ -60,35 +100,43 @@
       },
       "fieldConfig": {
         "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
           "thresholds": {
             "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 80 }
-            ]
+            "steps": [ { "color": "red", "value": null } ]
           },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 2,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
       },
       "targets": [
         {
           "datasource": { "type": "grafana-bigquery-datasource", "uid": "P1809F7CD0C757575" },
           "rawQuery": true,
-          "rawSql": "SELECT avg(fee) as avg_fee FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp)",
+          "rawSql": "SELECT TIMESTAMP_TRUNC(block_timestamp, HOUR) as time, avg(fee) as avg_fee FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp) GROUP BY 1 ORDER BY 1",
           "refId": "A",
           "timeColumn": "block_timestamp",
           "timeColumnType": "TIMESTAMP"
         }
       ],
-      "title": "Średnia opłata (Fee)",
-      "type": "stat"
+      "title": "Fee over Time (Avg)",
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -101,7 +149,8 @@
           "custom": { "align": "auto", "displayMode": "auto" }
         }
       },
-      "gridPos": { "h": 11, "w": 24, "x": 0, "y": 9 },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 12 },
+      "id": 3,
       "options": { "showHeader": true },
       "targets": [
         {
@@ -113,7 +162,7 @@
           "timeColumnType": "TIMESTAMP"
         }
       ],
-      "title": "Ostatnie Transakcje",
+      "title": "Recent Transactions",
       "type": "table"
     }
   ],

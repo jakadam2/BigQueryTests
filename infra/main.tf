@@ -164,9 +164,8 @@ resource "google_cloud_run_v2_service" "grafana" {
         cpu_idle = true
       }
 
-      # ZWIĘKSZONY CZAS NA START (Instalacja pluginów trwa)
       startup_probe {
-        initial_delay_seconds = 30 # Było 10, Grafana wstaje wolno z pluginami
+        initial_delay_seconds = 30 
         timeout_seconds       = 5
         period_seconds        = 10
         failure_threshold     = 10
@@ -191,27 +190,20 @@ resource "google_cloud_run_v2_service" "grafana" {
         name  = "GF_SERVER_HTTP_PORT"
         value = "3000"
       }
-      # Ważne: Grafana w Cloud Run potrzebuje wiedzieć, że jest za proxy/load balancerem
+
       env {
         name  = "GF_SERVER_ROOT_URL"
         value = "%(protocol)s://%(domain)s/"
       }
 
-      # --- POPRAWIONE MONTAŻE ---
-      
-      # 1. Montujemy do KATALOGU provisioning/dashboards.
-      # Plik w środku będzie się nazywał tak, jak zdefiniowano w volumes (dashboards.yaml)
       volume_mounts {
         name       = "dashboards-yaml"
         mount_path = "/etc/grafana/provisioning/dashboards" 
-        # Usunięto sub_path i nazwę pliku ze ścieżki
       }
 
-      # 2. Montujemy do KATALOGU, gdzie Grafana ma szukać JSONów
       volume_mounts {
         name       = "dashboard-json"
         mount_path = "/etc/grafana-dashboards"
-        # Usunięto sub_path i nazwę pliku ze ścieżki
       }
 
       volume_mounts {
@@ -226,7 +218,7 @@ resource "google_cloud_run_v2_service" "grafana" {
         secret = google_secret_manager_secret.grafana_dashboards_yaml.secret_id
         items {
           version = "latest"
-          path    = "dashboards.yaml" # To ustala nazwę pliku wewnątrz folderu
+          path    = "dashboards.yaml" 
         }
       }
     }
@@ -248,7 +240,7 @@ resource "google_cloud_run_v2_service" "grafana" {
         secret = google_secret_manager_secret.grafana_dashboard_json.secret_id
         items {
           version = "latest"
-          path    = "my_dashboard.json" # To ustala nazwę pliku wewnątrz folderu
+          path    = "my_dashboard.json" 
         }
       }
     }
