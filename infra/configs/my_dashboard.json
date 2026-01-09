@@ -43,7 +43,6 @@
       "targets": [
         {
           "datasource": { "type": "grafana-bigquery-datasource", "uid": "P1809F7CD0C757575" },
-          "format": "time_series",
           "rawQuery": true,
           "rawSql": "SELECT $__timeGroupAlias(block_timestamp, $__interval), count(*) as transactions FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp) GROUP BY 1 ORDER BY 1",
           "refId": "A",
@@ -81,7 +80,6 @@
       "targets": [
         {
           "datasource": { "type": "grafana-bigquery-datasource", "uid": "P1809F7CD0C757575" },
-          "format": "table",
           "rawQuery": true,
           "rawSql": "SELECT avg(fee) as avg_fee FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp)",
           "refId": "A",
@@ -108,7 +106,6 @@
       "targets": [
         {
           "datasource": { "type": "grafana-bigquery-datasource", "uid": "P1809F7CD0C757575" },
-          "format": "table",
           "rawQuery": true,
           "rawSql": "SELECT block_timestamp, block_number, hash, size, fee FROM `${project_id}.dbt_prod.bitcoin_transactions` WHERE $__timeFilter(block_timestamp) ORDER BY block_timestamp DESC LIMIT 100",
           "refId": "A",
